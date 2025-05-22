@@ -5,7 +5,7 @@
 
 An interactive web-based pathfinding visualization tool that brings popular algorithms to life! Watch A* and Dijkstra's algorithms find the shortest path through custom mazes with beautiful real-time animations.
 
-![Pathfinder Demo](https://pathfinder-visualizer-teal.vercel.app/)
+![Pathfinder Demo](assets/preview_gif.gif)
 
 ## ✨ Features
 
