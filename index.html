@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathfinding Visualization Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .instructions h3 {
+            margin-top: 0;
+            color: #ffeb3b;
+            font-size: 1.3em;
+        }
+
+        .instruction-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .instruction-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .color-box {
+            width: 20px;
+            height: 20px;
+            border: 2px solid white;
+            border-radius: 4px;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .controls h4 {
+            color: #ffeb3b;
+            margin-bottom: 10px;
+        }
+
+        canvas {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            background: white;
+            cursor: crosshair;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .signature {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 18px;
+            color: #ffeb3b;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .status {
+            text-align: center;
+            margin: 15px 0;
+            font-size: 18px;
+            font-weight: bold;
+            min-height: 25px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            canvas {
+                max-width: 100%;
+                height: auto;
+            }
+            
+            .instruction-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Pathfinding Visualization</h1>
+        
+        <div class="instructions">
+            <h3>📋 How to Play:</h3>
+            <div class="instruction-grid">
+                <div class="instruction-item">
+                    <div class="color-box" style="background-color: #ff6b35;"></div>
+                    <span><strong>Start Point:</strong> First click</span>
+                </div>
+                <div class="instruction-item">
+                    <div class="color-box" style="background-color: #7b2cbf;"></div>
+                    <span><strong>End Point:</strong> Second click</span>
+                </div>
+                <div class="instruction-item">
+                    <div class="color-box" style="background-color: #2d3436;"></div>
+                    <span><strong>Obstacles:</strong> Left click to draw</span>
+                </div>
+                <div class="instruction-item">
+                    <div class="color-box" style="background-color: #00b894;"></div>
+                    <span><strong>Explored:</strong> Algorithm progress</span>
+                </div>
+                <div class="instruction-item">
+                    <div class="color-box" style="background-color: #0984e3;"></div>
+                    <span><strong>Path:</strong> Final shortest path</span>
+                </div>
+                <div class="instruction-item">
+                    <div class="color-box" style="background-color: #e17055;"></div>
+                    <span><strong>Visited:</strong> Processed nodes</span>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <h4>🎮 Controls:</h4>
+                <p><strong>Left Click:</strong> Place start/end/obstacles | <strong>Right Click:</strong> Remove</p>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
+        
+        <div class="status" id="status">Click to place your start point!</div>
+        
+        <div class="buttons">
+            <button class="btn btn-primary" onclick="runAStar()" id="astarBtn">🚀 Run A* Algorithm</button>
+            <button class="btn btn-secondary" onclick="runDijkstra()" id="dijkstraBtn">📈 Run Dijkstra's Algorithm</button>
+            <button class="btn btn-danger" onclick="clearGrid()">🧹 Clear Grid</button>
+        </div>
+
+        <div class="signature">
+            Made with ❤️ by <a href="https://www.abhijitzende.com/" target="_blank" rel="noopener noreferrer">Abhijit Zende</a>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const statusDiv = document.getElementById('status');
+        
+        const ROWS = 30;
+        const CELL_SIZE = canvas.width / ROWS;
+        
+        // Colors
+        const COLORS = {
+            WHITE: '#ffffff',
+            BLACK: '#2d3436',
+            START: '#ff6b35',
+            END: '#7b2cbf',
+            OPEN: '#00b894',
+            CLOSED: '#e17055',
+            PATH: '#0984e3',
+            GRID: '#ddd'
+        };
+        
+        let grid = [];
+        let start = null;
+        let end = null;
+        let isRunning = false;
+        
+        class Spot {
+            constructor(row, col) {
+                this.row = row;
+                this.col = col;
+                this.x = col * CELL_SIZE;
+                this.y = row * CELL_SIZE;
+                this.color = COLORS.WHITE;
+                this.neighbors = [];
+                this.isWall = false;
+            }
+            
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, CELL_SIZE, CELL_SIZE);
+            }
+            
+            updateNeighbors() {
+                this.neighbors = [];
+                const directions = [[-1,0], [1,0], [0,-1], [0,1]];
+                
+                for (let [dr, dc] of directions) {
+                    const newRow = this.row + dr;
+                    const newCol = this.col + dc;
+                    
+                    if (newRow >= 0 && newRow < ROWS && newCol >= 0 && newCol < ROWS) {
+                        const neighbor = grid[newRow][newCol];
+                        if (!neighbor.isWall) {
+                            this.neighbors.push(neighbor);
+                        }
+                    }
+                }
+            }
+        }
+        
+        function initGrid() {
+            grid = [];
+            for (let i = 0; i < ROWS; i++) {
+                grid[i] = [];
+                for (let j = 0; j < ROWS; j++) {
+                    grid[i][j] = new Spot(i, j);
+                }
+            }
+        }
+        
+        function drawGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw cells
+            for (let row of grid) {
+                for (let spot of row) {
+                    spot.draw();
+                }
+            }
+            
+            // Draw grid lines
+            ctx.strokeStyle = COLORS.GRID;
+            ctx.lineWidth = 1;
+            
+            for (let i = 0; i <= ROWS; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * CELL_SIZE);
+                ctx.lineTo(canvas.width, i * CELL_SIZE);
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.moveTo(i * CELL_SIZE, 0);
+                ctx.lineTo(i * CELL_SIZE, canvas.height);
+                ctx.stroke();
+            }
+        }
+        
+        function getClickedPos(event) {
+            const rect = canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            const col = Math.floor(x / CELL_SIZE);
+            const row = Math.floor(y / CELL_SIZE);
+            
+            return { row, col };
+        }
+        
+        function heuristic(pos1, pos2) {
+            return Math.abs(pos1.row - pos2.row) + Math.abs(pos1.col - pos2.col);
+        }
+        
+        function reconstructPath(cameFrom, current) {
+            const path = [];
+            while (cameFrom.has(current)) {
+                current = cameFrom.get(current);
+                if (current !== start) {
+                    current.color = COLORS.PATH;
+                    path.push(current);
+                }
+            }
+            return path;
+        }
+        
+        async function aStar() {
+            if (!start || !end) {
+                updateStatus("❌ Please set both start and end points!");
+                return false;
+            }
+            
+            updateStatus("🚀 Running A* Algorithm...");
+            
+            for (let row of grid) {
+                for (let spot of row) {
+                    spot.updateNeighbors();
+                }
+            }
+            
+            const openSet = [start];
+            const cameFrom = new Map();
+            const gScore = new Map();
+            const fScore = new Map();
+            
+            // Initialize scores
+            for (let row of grid) {
+                for (let spot of row) {
+                    gScore.set(spot, Infinity);
+                    fScore.set(spot, Infinity);
+                }
+            }
+            
+            gScore.set(start, 0);
+            fScore.set(start, heuristic(start, end));
+            
+            while (openSet.length > 0) {
+                // Find node with lowest fScore
+                let current = openSet[0];
+                let currentIndex = 0;
+                
+                for (let i = 1; i < openSet.length; i++) {
+                    if (fScore.get(openSet[i]) < fScore.get(current)) {
+                        current = openSet[i];
+                        currentIndex = i;
+                    }
+                }
+                
+                openSet.splice(currentIndex, 1);
+                
+                if (current === end) {
+                    reconstructPath(cameFrom, end);
+                    updateStatus("✅ A* Algorithm completed! Path found!");
+                    drawGrid();
+                    return true;
+                }
+                
+                if (current !== start) {
+                    current.color = COLORS.CLOSED;
+                }
+                
+                for (let neighbor of current.neighbors) {
+                    const tentativeGScore = gScore.get(current) + 1;
+                    
+                    if (tentativeGScore < gScore.get(neighbor)) {
+                        cameFrom.set(neighbor, current);
+                        gScore.set(neighbor, tentativeGScore);
+                        fScore.set(neighbor, tentativeGScore + heuristic(neighbor, end));
+                        
+                        if (!openSet.includes(neighbor)) {
+                            openSet.push(neighbor);
+                            if (neighbor !== end) {
+                                neighbor.color = COLORS.OPEN;
+                            }
+                        }
+                    }
+                }
+                
+                drawGrid();
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            
+            updateStatus("❌ A* Algorithm completed! No path found!");
+            return false;
+        }
+        
+        async function dijkstra() {
+            if (!start || !end) {
+                updateStatus("❌ Please set both start and end points!");
+                return false;
+            }
+            
+            updateStatus("📈 Running Dijkstra's Algorithm...");
+            
+            for (let row of grid) {
+                for (let spot of row) {
+                    spot.updateNeighbors();
+                }
+            }
+            
+            const distances = new Map();
+            const previous = new Map();
+            const unvisited = [];
+            
+            // Initialize distances
+            for (let row of grid) {
+                for (let spot of row) {
+                    distances.set(spot, Infinity);
+                    unvisited.push(spot);
+                }
+            }
+            
+            distances.set(start, 0);
+            
+            while (unvisited.length > 0) {
+                // Find unvisited node with minimum distance
+                let current = null;
+                let minDistance = Infinity;
+                
+                for (let node of unvisited) {
+                    if (distances.get(node) < minDistance) {
+                        minDistance = distances.get(node);
+                        current = node;
+                    }
+                }
+                
+                if (current === null || minDistance === Infinity) break;
+                
+                unvisited.splice(unvisited.indexOf(current), 1);
+                
+                if (current === end) {
+                    reconstructPath(previous, end);
+                    updateStatus("✅ Dijkstra's Algorithm completed! Path found!");
+                    drawGrid();
+                    return true;
+                }
+                
+                if (current !== start) {
+                    current.color = COLORS.CLOSED;
+                }
+                
+                for (let neighbor of current.neighbors) {
+                    if (!unvisited.includes(neighbor)) continue;
+                    
+                    const alt = distances.get(current) + 1;
+                    if (alt < distances.get(neighbor)) {
+                        distances.set(neighbor, alt);
+                        previous.set(neighbor, current);
+                        if (neighbor !== end) {
+                            neighbor.color = COLORS.OPEN;
+                        }
+                    }
+                }
+                
+                drawGrid();
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+            
+            updateStatus("❌ Dijkstra's Algorithm completed! No path found!");
+            return false;
+        }
+        
+        function clearGrid() {
+            initGrid();
+            start = null;
+            end = null;
+            isRunning = false;
+            updateStatus("Click to place your start point!");
+            drawGrid();
+            
+            // Re-enable algorithm buttons
+            document.getElementById('astarBtn').disabled = false;
+            document.getElementById('dijkstraBtn').disabled = false;
+        }
+        
+        function updateStatus(message) {
+            statusDiv.textContent = message;
+        }
+        
+        async function runAStar() {
+            if (isRunning) return;
+            isRunning = true;
+            document.getElementById('astarBtn').disabled = true;
+            document.getElementById('dijkstraBtn').disabled = true;
+            
+            // Clear previous algorithm results
+            for (let row of grid) {
+                for (let spot of row) {
+                    if (spot.color === COLORS.OPEN || spot.color === COLORS.CLOSED || spot.color === COLORS.PATH) {
+                        spot.color = COLORS.WHITE;
+                    }
+                }
+            }
+            
+            if (start) start.color = COLORS.START;
+            if (end) end.color = COLORS.END;
+            drawGrid();
+            
+            await aStar();
+            isRunning = false;
+        }
+        
+        async function runDijkstra() {
+            if (isRunning) return;
+            isRunning = true;
+            document.getElementById('astarBtn').disabled = true;
+            document.getElementById('dijkstraBtn').disabled = true;
+            
+            // Clear previous algorithm results
+            for (let row of grid) {
+                for (let spot of row) {
+                    if (spot.color === COLORS.OPEN || spot.color === COLORS.CLOSED || spot.color === COLORS.PATH) {
+                        spot.color = COLORS.WHITE;
+                    }
+                }
+            }
+            
+            if (start) start.color = COLORS.START;
+            if (end) end.color = COLORS.END;
+            drawGrid();
+            
+            await dijkstra();
+            isRunning = false;
+        }
+        
+        // Event listeners
+        canvas.addEventListener('click', (event) => {
+            if (isRunning) return;
+            
+            const pos = getClickedPos(event);
+            const spot = grid[pos.row][pos.col];
+            
+            if (!start && spot !== end) {
+                start = spot;
+                start.color = COLORS.START;
+                updateStatus("Great! Now click to place your end point!");
+            } else if (!end && spot !== start) {
+                end = spot;
+                end.color = COLORS.END;
+                updateStatus("Perfect! Draw obstacles with left click, then run an algorithm!");
+            } else if (spot !== start && spot !== end) {
+                spot.isWall = !spot.isWall;
+                spot.color = spot.isWall ? COLORS.BLACK : COLORS.WHITE;
+            }
+            
+            drawGrid();
+        });
+        
+        canvas.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+            if (isRunning) return;
+            
+            const pos = getClickedPos(event);
+            const spot = grid[pos.row][pos.col];
+            
+            if (spot === start) {
+                start = null;
+                updateStatus("Start point removed. Click to place a new start point!");
+            } else if (spot === end) {
+                end = null;
+                updateStatus("End point removed. Click to place a new end point!");
+            }
+            
+            spot.color = COLORS.WHITE;
+            spot.isWall = false;
+            drawGrid();
+        });
+        
+        // Initialize the game
+        initGrid();
+        drawGrid();
+    </script>
+</body>
+</html>
